@@ -1,0 +1,8 @@
+<library path="lib/libhector_sbpl_stairs_planner">
+  <class name="HectorSbplStairsPlanner" type="hector_sbpl_stairs_planner::HectorSbplStairsPlanner" base_class_type="nav_core::BaseGlobalPlanner">
+    <description>
+      An implmentation of a search-based planning using anytime a* and a lattice graph
+    </description>
+  </class>
+</library>
+

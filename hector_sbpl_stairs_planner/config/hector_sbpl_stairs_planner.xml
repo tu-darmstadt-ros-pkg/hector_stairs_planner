@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+<node name="hector_sbpl_stairs_planner_test_node" pkg="hector_sbpl_stairs_planner" type="hector_sbpl_stairs_planner_test_node" respawn="true" output="screen">
+<param name="HectorSbplStairsPlanner/primitive_filename" value="$(find hector_sbpl_stairs_planner)/mprim/mprimBene.mprim" />    
+<rosparam file="$(find hector_sbpl_stairs_planner)/config/argo.yaml" command="load"/>
+ </node>
+</launch>

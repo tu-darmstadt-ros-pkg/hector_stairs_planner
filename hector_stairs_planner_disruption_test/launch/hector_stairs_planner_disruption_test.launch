@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+<node name="hector_stairs_planner_disruption_test_node" pkg="hector_stairs_planner_disruption_test" type="hector_stairs_planner_disruption_test_node" respawn="true" output="screen"/>
+<rosparam file="$(find hector_stairs_planner_disruption_test)/config/params.yaml" />
+</launch>

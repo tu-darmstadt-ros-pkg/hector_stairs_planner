@@ -1,0 +1,17 @@
+planner_type: ARAPlanner
+allocated_time: 5.0
+initial_epsilon: 15.0
+environment_type: HectorSBPLFlipperControlEnv
+forward_search: true 
+force_scratch_limit: 555
+nominalvel_mpersecs: 0.4
+timetoturn45degsinplace_secs: 2.0
+between_staris_distance_threshold: 0.5
+same_stairs_distance_threshold: 0.6
+number_orientaions: 16
+lethal_obstacle: 100
+obst_cost_thresh: 20
+maxFlipperOffsetX: 0.5
+maxFlipperOffsetY: 0.5
+pitchTresh: 0.87
+maxHeightInWorld: 2.5
