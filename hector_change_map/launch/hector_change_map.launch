@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-<param name="map_stairs_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_stairs.yaml" />    
+<param name="map_stairs_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_floor_one.yaml" />    
 <param name="map_0_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map.yaml" />    
-<param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_layer2.yaml" />   
+<param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_floor_two.yaml" />   
 <node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen"/>
 <!--<rosparam file="$(find hector_change_map)/config/params.yaml" />-->
 </launch>

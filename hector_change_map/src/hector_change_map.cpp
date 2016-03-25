@@ -79,10 +79,12 @@ void HectorChangeMap::ChangeLayerCB(const hector_change_layer_msgs::Change_layer
 }
 
 void HectorChangeMap::publishMapForLayer(){
+    //stair traversal layer are always numberd uneven
     if(!all_layer_information_.empty()){
         //publish map for layer
-        ROS_INFO("publish map for layer, %i", current_robot_layer_);
+        ROS_INFO("provide map for layer, %i", current_robot_layer_);
         map_pub_.publish(all_layer_information_.at(current_robot_layer_).map);
+
         if(!all_layer_information_.at(current_robot_layer_).staircases.size()==0){
             //publish stairs information for layer
             ROS_INFO("publish staircase information for layer: %i", current_robot_layer_);
