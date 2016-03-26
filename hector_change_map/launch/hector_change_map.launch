@@ -1,8 +1,22 @@
 <?xml version="1.0"?>
 <launch>
-<param name="map_stairs_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_floor_one.yaml" />    
+
+  <arg name="scenario_name" default="umad_default"/>
+<!--<param name="map_stairs_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_floor_one.yaml" />    
 <param name="map_0_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map.yaml" />    
 <param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/map_floor_two.yaml" />   
+<param name="stairs_info_file" value="$(find argo_scenario_data)/maps/argo_taurob_test_arena_v1/stairsInfoLayer1.yaml" />-->
+<!--<param name="map_stairs_file" value="$(find argo_scenario_data)/maps/argo_umad_default/map_floor_one.yaml" />    
+<param name="map_0_file" value="$(find argo_scenario_data)/maps/argo_umad_default/map.yaml" />    
+<param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_umad_default/map_floor_two.yaml" />   
+<param name="stairs_info_file" value="$(find argo_scenario_data)/maps/argo_umad_default/stairsInfoLayer1.yaml" />
+<node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen"/>-->
+
+<param name="map_stairs_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_one.yaml" />    
+<param name="map_0_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map.yaml" />    
+<param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml" />   
+<param name="stairs_info_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/stairsInfoLayer1.yaml" />
 <node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen"/>
+
 <!--<rosparam file="$(find hector_change_map)/config/params.yaml" />-->
 </launch>

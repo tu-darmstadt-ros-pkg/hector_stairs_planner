@@ -14,4 +14,4 @@ obst_cost_thresh: 20
 maxFlipperOffsetX: 0.5
 maxFlipperOffsetY: 0.5
 pitchTresh: 0.87
-maxHeightInWorld: 2.5
+maxHeightInWorld: 3.5

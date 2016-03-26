@@ -110,7 +110,7 @@ void HectorSbplStairsPlanner::initialize(std::string name, costmap_2d::Costmap2D
         private_nh.param("maxFlipperOffsetX", maxFlipperOffsetX_, 0.5);
         private_nh.param("maxFlipperOffsetY", maxFlipperOffsetY_, 0.5);
         private_nh.param("pitchTresh", pitchTresh_, 1.0);
-        private_nh.param("maxHeightInWorld", maxHeightInWorld_, 2.5);
+        private_nh.param("maxHeightInWorld", maxHeightInWorld_, 3.5);
 
         int lethal_obstacle;
         private_nh.param("lethal_obstacle",lethal_obstacle,100);

@@ -62,6 +62,7 @@ struct layer_information {
           std::string map_stairs_file_;
           std::string map_0_file_;
           std::string map_2_file_;
+          std::string stairs_info_file_;
           std::string frame_id_;
 
           int current_robot_layer_;
@@ -73,6 +74,7 @@ struct layer_information {
           void insertStairs(Eigen::Vector3f bottom1, Eigen::Vector3f bottom2, Eigen::Vector3f top1, Eigen::Vector3f top2, Eigen::Vector3f direction, float yaw, float pitch, float number_of_points, geometry_msgs::PoseStamped orientation, int layer);
           void publishStairsInformationForLayer(int layer);
           void loadMap(std::string file_to_load);
+          void loadStairsInfo(std::string file_to_load);
 
     };
 }

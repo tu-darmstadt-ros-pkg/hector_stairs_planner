@@ -15,59 +15,62 @@ HectorChangeMap::HectorChangeMap(){
     nh.param("map_0_file", map_0_file_, std::string(""));
     nh.param("map_stairs_file", map_stairs_file_, std::string(""));
     nh.param("map_2_file", map_2_file_, std::string(""));
+    nh.param("stairs_info_file", stairs_info_file_, std::string(""));
     nh.param("frame_id", frame_id_, std::string("/world"));
-    nh.param("current_robot_layer_", current_robot_layer_, 0);
+    nh.param("current_robot_layer", current_robot_layer_, 0);
 
     loadMap(map_0_file_);
     loadMap(map_stairs_file_);
     loadMap(map_2_file_);
 
-    Eigen::Vector3f bottom1;
-    Eigen::Vector3f bottom2;
-    Eigen::Vector3f top1;
-    Eigen::Vector3f top2;
-    Eigen::Vector3f direction;
-    float yaw;
-    float pitch;
-    float number_of_points;
-    geometry_msgs::PoseStamped orientation;
+    loadStairsInfo(stairs_info_file_);
 
-    bottom1(0)=0.08;
-    bottom1(1)=2.97;
-    bottom1(2)=0.0;
+//    Eigen::Vector3f bottom1;
+//    Eigen::Vector3f bottom2;
+//    Eigen::Vector3f top1;
+//    Eigen::Vector3f top2;
+//    Eigen::Vector3f direction;
+//    float yaw;
+//    float pitch;
+//    float number_of_points;
+//    geometry_msgs::PoseStamped orientation;
 
-    bottom2(0)=-0.97;
-    bottom2(1)=2.97;
-    bottom2(2)=0.0;
+//    bottom1(0)=0.08;
+//    bottom1(1)=2.97;
+//    bottom1(2)=0.0;
 
-    top1(0)=0.08;
-    top1(1)=1.37;
-    top1(2)=1.81;
+//    bottom2(0)=-0.97;
+//    bottom2(1)=2.97;
+//    bottom2(2)=0.0;
 
-    top2(0)=-0.97;
-    top2(1)=1.37;
-    top2(2)=1.81;
+//    top1(0)=0.08;
+//    top1(1)=1.37;
+//    top1(2)=1.81;
 
-    direction(0)=0;
-    direction(1)=1;
-    direction(2)=-0.5;
+//    top2(0)=-0.97;
+//    top2(1)=1.37;
+//    top2(2)=1.81;
 
-    yaw= M_PI_2;
-    pitch= 0.844;
-    number_of_points= 8;
+//    direction(0)=0;
+//    direction(1)=1;
+//    direction(2)=-0.5;
 
-    orientation.header.frame_id="/world";
-    orientation.pose.position.x=-0.45;
-    orientation.pose.position.y=2.17;
-    orientation.pose.position.z=1.0;
-    tf::Quaternion temp;
-    temp.setEulerZYX(yaw,pitch,0.0);
-    orientation.pose.orientation.x=temp.getX();
-    orientation.pose.orientation.y=temp.getY();
-    orientation.pose.orientation.z=temp.getZ();
-    orientation.pose.orientation.w=temp.getW();
+//    yaw= M_PI_2;
+//    pitch= 0.844;
+//    number_of_points= 8;
 
-    insertStairs(bottom1, bottom2, top1, top2, direction, yaw, pitch, number_of_points, orientation, 1);
+//    orientation.header.frame_id="/world";
+//    orientation.pose.position.x=-0.45;
+//    orientation.pose.position.y=2.17;
+//    orientation.pose.position.z=1.0;
+//    tf::Quaternion temp;
+//    temp.setEulerZYX(yaw,pitch,0.0);
+//    orientation.pose.orientation.x=temp.getX();
+//    orientation.pose.orientation.y=temp.getY();
+//    orientation.pose.orientation.z=temp.getZ();
+//    orientation.pose.orientation.w=temp.getW();
+
+//    insertStairs(bottom1, bottom2, top1, top2, direction, yaw, pitch, number_of_points, orientation, 1);
 }
 
 HectorChangeMap::~HectorChangeMap()
@@ -256,6 +259,70 @@ void HectorChangeMap::loadMap(std::string file_to_load){
     layer_info.map.header.frame_id = frame_id_;
     layer_info.map.header.stamp = ros::Time::now();
     all_layer_information_.push_back(layer_info);
+}
+
+void HectorChangeMap::loadStairsInfo(std::string file_to_load){
+    std::string frame = "";
+    float layer;
+    Eigen::Vector3f bottom1;
+    Eigen::Vector3f bottom2;
+    Eigen::Vector3f top1;
+    Eigen::Vector3f top2;
+    Eigen::Vector3f direction;
+    Eigen::Vector3f position;
+    float yaw;
+    float pitch;
+    float number_of_points;
+    geometry_msgs::PoseStamped orientation;
+
+    YAML::Node file = YAML::LoadFile(file_to_load.c_str());
+
+    frame= file["frame"].as<std::string>();
+
+    layer= file["layer"].as<float>();
+
+    bottom1(0)=file["bottom1"][0].as<float>();
+    bottom1(1)=file["bottom1"][1].as<float>();
+    bottom1(2)=file["bottom1"][2].as<float>();
+
+    bottom2(0)=file["bottom2"][0].as<float>();
+    bottom2(1)=file["bottom2"][1].as<float>();
+    bottom2(2)=file["bottom2"][2].as<float>();
+
+    top1(0)=file["top1"][0].as<float>();
+    top1(1)=file["top1"][1].as<float>();
+    top1(2)=file["top1"][2].as<float>();
+
+    top2(0)=file["top2"][0].as<float>();
+    top2(1)=file["top2"][1].as<float>();
+    top2(2)=file["top2"][2].as<float>();
+
+    position(0)=file["position"][0].as<float>();
+    position(1)=file["position"][1].as<float>();
+    position(2)=file["position"][2].as<float>();
+
+    direction(0)=file["direction"][0].as<float>();
+    direction(1)=file["direction"][1].as<float>();
+    direction(2)=file["direction"][2].as<float>();
+
+    yaw= file["yaw"].as<double>();
+    pitch= file["pitch"].as<double>();
+    number_of_points= file["number_of_points"].as<double>();
+
+    ROS_INFO("[hector_change_map] stairs info file loaded");
+
+    orientation.header.frame_id=frame;
+    orientation.pose.position.x=position(0);
+    orientation.pose.position.y=position(1);
+    orientation.pose.position.z=position(2);
+    tf::Quaternion temp;
+    temp.setEulerZYX(yaw,pitch,0.0);
+    orientation.pose.orientation.x=temp.getX();
+    orientation.pose.orientation.y=temp.getY();
+    orientation.pose.orientation.z=temp.getZ();
+    orientation.pose.orientation.w=temp.getW();
+
+    insertStairs(bottom1, bottom2, top1, top2, direction, yaw, pitch, number_of_points, orientation, layer);
 }
 
 }
