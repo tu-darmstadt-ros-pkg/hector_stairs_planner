@@ -122,6 +122,7 @@ private:
   bool forward_search_; /** whether to use forward or backward search */
   std::string primitive_filename_; /** where to find the motion primitives for the current robot */
   int force_scratch_limit_; /** the number of cells that have to be changed in the costmap to force the planner to plan from scratch even if its an incremental planner */
+  bool robot_symmetric_;
 
   hector_stairs_planner_msgs::Path_with_Flipper refined_path_;
 

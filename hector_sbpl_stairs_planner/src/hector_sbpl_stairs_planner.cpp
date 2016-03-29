@@ -111,6 +111,7 @@ void HectorSbplStairsPlanner::initialize(std::string name, costmap_2d::Costmap2D
         private_nh.param("maxFlipperOffsetY", maxFlipperOffsetY_, 0.5);
         private_nh.param("pitchTresh", pitchTresh_, 1.0);
         private_nh.param("maxHeightInWorld", maxHeightInWorld_, 3.5);
+        private_nh.param("robot_symmetric", robot_symmetric_, bool(false));
 
         int lethal_obstacle;
         private_nh.param("lethal_obstacle",lethal_obstacle,100);
@@ -269,6 +270,16 @@ bool HectorSbplStairsPlanner::makePlan(const geometry_msgs::PoseStamped& start,
              startX, startY, goalX, goalY);
     double theta_start = 2 * atan2(start.pose.orientation.z, start.pose.orientation.w);
     double theta_goal = 2 * atan2(goal.pose.orientation.z, goal.pose.orientation.w);
+
+    if(robot_symmetric_){
+    //argos robot is symmetric
+    if(fabs(theta_start-theta_goal)> M_PI_2 && fabs(theta_start-theta_goal)< M_PI+M_PI_2 ){
+        theta_goal=theta_goal-M_PI;
+        if(theta_goal<0){
+            theta_goal=theta_goal+2*M_PI;
+        }
+    }
+    }
 
     //update Heightmap with stairs information; replace stairs with ramps
     int allCount = 0;
@@ -770,6 +781,7 @@ int HectorSbplStairsPlanner::updateCostInExtendedStairsArea(Eigen::Vector2f base
     //    ROS_INFO("extended Staris cost: %i", newCost);
     float inflationStairs=0.4;
     inflationStairs=inflationRadius_;
+    inflationStairs=0.0;
     bool pointOnBorder=false;
     for(ssize_t ix(startIterationX_d); ix < endIterartionX_d; ++ix) {
         for(ssize_t iy(startIterationY_d); iy < endIterartionY_d; ++iy) {
