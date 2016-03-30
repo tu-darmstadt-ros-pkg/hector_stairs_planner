@@ -900,7 +900,7 @@ bool HectorSBPLFlipperControlEnv::IsPossibleStairsTransitionFront(int X, int Y, 
         }
     }
 
-//    maxX=maxX+inflationRadius_;
+    maxX=maxX+inflationRadius_;
     float offsetX= cos(pose.theta) * maxX;
     float offsetY= sin(pose.theta) * maxX;
 
@@ -2451,6 +2451,7 @@ void HectorSBPLFlipperControlEnv::GetSuccs(int SourceStateID, vector<int>* SuccI
                 // robot have to go upwards
                 // robot at bottom of stairs
                 if(robotOnStairs && HashEntry->flipperInStairsDrivingPos==false){
+//                    if(robotOnStairs && possibleStairBack &&possibleStairFront && HashEntry->flipperInStairsDrivingPos==false){
                     flipperInStarisDrivingPos=true;
                     flipperFlagInCurrentState=false;
                 }

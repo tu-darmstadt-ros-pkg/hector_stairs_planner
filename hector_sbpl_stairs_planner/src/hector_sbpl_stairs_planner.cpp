@@ -272,7 +272,7 @@ bool HectorSbplStairsPlanner::makePlan(const geometry_msgs::PoseStamped& start,
     double theta_goal = 2 * atan2(goal.pose.orientation.z, goal.pose.orientation.w);
 
     if(robot_symmetric_){
-    //argos robot is symmetric
+    //e.g. argos robot is symmetric
     if(fabs(theta_start-theta_goal)> M_PI_2 && fabs(theta_start-theta_goal)< M_PI+M_PI_2 ){
         theta_goal=theta_goal-M_PI;
         if(theta_goal<0){
@@ -297,7 +297,7 @@ bool HectorSbplStairsPlanner::makePlan(const geometry_msgs::PoseStamped& start,
 
     Eigen::Vector3f minXminY, minXmaxY, maxXminY, maxXmaxY;
     int startIterationX_d, endIterartionX_d ,startIterationY_d, endIterartionY_d;
-ROS_INFO("[hector_stairs_planner] number of stairs: %i", all_stairs_information_.size());
+ROS_DEBUG("[hector_stairs_planner] number of stairs: %i", all_stairs_information_.size());
     for(int i=0; i<all_stairs_information_.size(); i++){
         if(all_stairs_information_.at(i).pitch < pitchTresh_){
 
