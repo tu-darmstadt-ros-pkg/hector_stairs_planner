@@ -183,7 +183,7 @@ void HectorSbplStairsPlanner::initialize(std::string name, costmap_2d::Costmap2D
         flipperActuationPoints_pub_=  nh.advertise<visualization_msgs::MarkerArray>("/hector_sbpl_stairs_planner/flipperActuationPoints", 100, true);
 
         information_about_stairs_sub_= nh.subscribe("/hector_stair_detection/border_and_orientation_of_stairs", 1, &HectorSbplStairsPlanner::updateInformationAboutStairs_Callback, this);
-        stairs_information_reset_sub_= nh.subscribe("/change_layer/reset_stairs_information", 1, &HectorSbplStairsPlanner::resetStairsCB, this);
+        stairs_information_reset_sub_= nh.subscribe("/hector_change_map/reset_stairs_information", 1, &HectorSbplStairsPlanner::resetStairsCB, this);
 
         all_stairs_information_border_pub_=  nh.advertise<visualization_msgs::MarkerArray>("/hector_sbpl_stairs_planner/all_stairs_border", 100, true);
         all_stairs_information_orientaion_pub_= nh.advertise<geometry_msgs::PoseArray> ("/hector_sbpl_stairs_planner/all_stairs_orientaion", 100, true);
@@ -595,6 +595,7 @@ ROS_DEBUG("[hector_stairs_planner] number of stairs: %i", all_stairs_information
         //default
         path_w_flipper.flipperFront=-M_PI_2;
         path_w_flipper.flipperRear=-M_PI_2;
+        path_w_flipper.interpolate=false;
 
         if(sbpl_path[i].flipperFlag==true){
             //insert current flipper pos
@@ -681,8 +682,15 @@ ROS_DEBUG("[hector_stairs_planner] number of stairs: %i", all_stairs_information
                 break;
             case 2:
                 if(robotMovesUpstairs || startFlipperOffset==2){
-                    path_w_flipper.flipperFront=0;
+//                    path_w_flipper.flipperFront=0;
+//                    path_w_flipper.flipperRear=0;
+                    path_w_flipper.flipperFront=stairs_pitch;
                     path_w_flipper.flipperRear=0;
+//                    path_w_flipper.flipperFront=0;
+//                    path_w_flipper.flipperRear=stairs_pitch;
+
+//                    path_w_flipper.flipperFront=stairs_pitch/2;
+//                    path_w_flipper.flipperRear=stairs_pitch/2;
                 }else{
                     path_w_flipper.flipperFront=-M_PI_2;
                     path_w_flipper.flipperRear=-M_PI_2;
@@ -692,6 +700,8 @@ ROS_DEBUG("[hector_stairs_planner] number of stairs: %i", all_stairs_information
             case 3:
                 path_w_flipper.flipperFront=-M_PI_2;
                 path_w_flipper.flipperRear=-M_PI_2;
+
+                path_w_flipper.interpolate=true;
 
                 break;
             }

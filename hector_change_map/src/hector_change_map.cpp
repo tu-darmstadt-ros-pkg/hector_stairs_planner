@@ -5,72 +5,32 @@ namespace hector_change_map{
 HectorChangeMap::HectorChangeMap(){
     ROS_INFO ("change map node started");
     ros::NodeHandle nh("");
-    map_pub_=  nh.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
-    stairs_information_reset_pub_=  nh.advertise<std_msgs::Bool>("/change_layer/reset_stairs_information", 100, true);
-    stairs_information_pub_=  nh.advertise<hector_stair_detection_msgs::BorderAndOrientationOfStairs>("/hector_stair_detection/border_and_orientation_of_stairs", 100, true);
-    stairs_information_pub_debug_=  nh.advertise<visualization_msgs::MarkerArray>("/change_layer/stairs_border_debug", 100, true);
 
-    change_layer_sub_ = nh.subscribe<hector_change_layer_msgs::Change_layer_msg>("/change_planner", 1, &HectorChangeMap::ChangeLayerCB, this);
+    map_pub_=  nh.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
+    stairs_information_reset_pub_=  nh.advertise<std_msgs::Bool>("/hector_change_map/reset_stairs_information", 100, true);
+    stairs_information_pub_=  nh.advertise<hector_stair_detection_msgs::BorderAndOrientationOfStairs>("/hector_stair_detection/border_and_orientation_of_stairs", 100, true);
+    stairs_information_pub_debug_=  nh.advertise<visualization_msgs::MarkerArray>("/hector_change_map/stairs_border_debug", 100, true);
+
+    change_layer_sub_ = nh.subscribe<hector_change_layer_msgs::Change_layer_msg>("/hector_change_map/change_layer", 1, &HectorChangeMap::ChangeLayerCB, this);
 
     nh.param("map_0_file", map_0_file_, std::string(""));
-    nh.param("map_stairs_file", map_stairs_file_, std::string(""));
+    nh.param("map_1_file", map_1_file_, std::string(""));
     nh.param("map_2_file", map_2_file_, std::string(""));
     nh.param("stairs_info_file", stairs_info_file_, std::string(""));
     nh.param("frame_id", frame_id_, std::string("/world"));
     nh.param("current_robot_layer", current_robot_layer_, 0);
 
+    //load maps
     loadMap(map_0_file_);
-    loadMap(map_stairs_file_);
+    loadMap(map_1_file_);
     loadMap(map_2_file_);
 
+    //load stairs information
     loadStairsInfo(stairs_info_file_);
 
-//    Eigen::Vector3f bottom1;
-//    Eigen::Vector3f bottom2;
-//    Eigen::Vector3f top1;
-//    Eigen::Vector3f top2;
-//    Eigen::Vector3f direction;
-//    float yaw;
-//    float pitch;
-//    float number_of_points;
-//    geometry_msgs::PoseStamped orientation;
+    //provide initial map
+    map_pub_.publish(all_layer_information_.at(0).map);
 
-//    bottom1(0)=0.08;
-//    bottom1(1)=2.97;
-//    bottom1(2)=0.0;
-
-//    bottom2(0)=-0.97;
-//    bottom2(1)=2.97;
-//    bottom2(2)=0.0;
-
-//    top1(0)=0.08;
-//    top1(1)=1.37;
-//    top1(2)=1.81;
-
-//    top2(0)=-0.97;
-//    top2(1)=1.37;
-//    top2(2)=1.81;
-
-//    direction(0)=0;
-//    direction(1)=1;
-//    direction(2)=-0.5;
-
-//    yaw= M_PI_2;
-//    pitch= 0.844;
-//    number_of_points= 8;
-
-//    orientation.header.frame_id="/world";
-//    orientation.pose.position.x=-0.45;
-//    orientation.pose.position.y=2.17;
-//    orientation.pose.position.z=1.0;
-//    tf::Quaternion temp;
-//    temp.setEulerZYX(yaw,pitch,0.0);
-//    orientation.pose.orientation.x=temp.getX();
-//    orientation.pose.orientation.y=temp.getY();
-//    orientation.pose.orientation.z=temp.getZ();
-//    orientation.pose.orientation.w=temp.getW();
-
-//    insertStairs(bottom1, bottom2, top1, top2, direction, yaw, pitch, number_of_points, orientation, 1);
 }
 
 HectorChangeMap::~HectorChangeMap()
@@ -85,12 +45,12 @@ void HectorChangeMap::publishMapForLayer(){
     //stair traversal layer are always numberd uneven
     if(!all_layer_information_.empty()){
         //publish map for layer
-        ROS_INFO("provide map for layer, %i", current_robot_layer_);
+        ROS_DEBUG("provide map for layer, %i", current_robot_layer_);
         map_pub_.publish(all_layer_information_.at(current_robot_layer_).map);
 
         if(!all_layer_information_.at(current_robot_layer_).staircases.size()==0){
             //publish stairs information for layer
-            ROS_INFO("publish staircase information for layer: %i", current_robot_layer_);
+            ROS_DEBUG("publish staircase information for layer: %i", current_robot_layer_);
             publishStairsInformationForLayer(current_robot_layer_);
         }
     }

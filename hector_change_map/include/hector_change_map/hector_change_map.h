@@ -59,7 +59,7 @@ struct layer_information {
 
           std::vector<layer_information> all_layer_information_;
 
-          std::string map_stairs_file_;
+          std::string map_1_file_;
           std::string map_0_file_;
           std::string map_2_file_;
           std::string stairs_info_file_;

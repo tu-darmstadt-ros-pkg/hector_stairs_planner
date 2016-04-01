@@ -7,3 +7,5 @@ nav_msgs/Path segment
 float32 flipperFront
 #flipper angle rear
 float32 flipperRear
+#flipper angle has to be interpolated to the robots position
+bool interpolate
