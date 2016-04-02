@@ -200,6 +200,7 @@ void HectorChangeMap::loadMap(std::string file_to_load){
     origin[0]=file["origin"][0].as<double>();
     origin[1]=file["origin"][1].as<double>();
     origin[2]=file["origin"][2].as<double>();
+    origin[3]=file["origin"][3].as<double>();
 
     mapfname=file["image"].as<std::string>();
     if(mapfname[0] != '/')
@@ -213,8 +214,12 @@ void HectorChangeMap::loadMap(std::string file_to_load){
 
     layer_information layer_info;
     nav_msgs::GetMap::Response map_resp_;
-    map_server::loadMapFromFile(&map_resp_, mapfname.c_str(),res,negate,occ_th,free_th, origin);
+    double origin_for_mapserver[]= {origin[0], origin[1], origin[3]};
+    map_server::loadMapFromFile(&map_resp_, mapfname.c_str(),res,negate,occ_th,free_th, origin_for_mapserver);
     layer_info.map=map_resp_.map;
+    layer_info.map.info.origin.position.x= origin[0];
+    layer_info.map.info.origin.position.y= origin[1];
+    layer_info.map.info.origin.position.z= origin[2];
     layer_info.map.info.map_load_time = ros::Time::now();
     layer_info.map.header.frame_id = frame_id_;
     layer_info.map.header.stamp = ros::Time::now();
