@@ -10,8 +10,13 @@ HectorChangeMap::HectorChangeMap(){
     stairs_information_reset_pub_=  nh.advertise<std_msgs::Bool>("/hector_change_map/reset_stairs_information", 100, true);
     stairs_information_pub_=  nh.advertise<hector_stair_detection_msgs::BorderAndOrientationOfStairs>("/hector_stair_detection/border_and_orientation_of_stairs", 100, true);
     stairs_information_pub_debug_=  nh.advertise<visualization_msgs::MarkerArray>("/hector_change_map/stairs_border_debug", 100, true);
+    initial_pose_pub_= nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 100);
 
     change_layer_sub_ = nh.subscribe<hector_change_layer_msgs::Change_layer_msg>("/hector_change_map/change_layer", 1, &HectorChangeMap::ChangeLayerCB, this);
+    initial_pose_2D_sub_ = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose_2D", 1, &HectorChangeMap::InitialPose2DCB, this);
+
+    dynamic_recf_type = boost::bind(&HectorChangeMap::dynamic_recf_cb, this, _1, _2);
+    dynamic_recf_server.setCallback(dynamic_recf_type);
 
     nh.param("map_0_file", map_0_file_, std::string(""));
     nh.param("map_1_file", map_1_file_, std::string(""));
@@ -41,12 +46,25 @@ void HectorChangeMap::ChangeLayerCB(const hector_change_layer_msgs::Change_layer
     publishMapForLayer();
 }
 
+void HectorChangeMap::InitialPose2DCB(const geometry_msgs::PoseWithCovarianceStamped initial_pose_2D){
+    //initial pose 2D <=> z always 0
+    geometry_msgs::PoseWithCovarianceStamped initial_pose;
+    initial_pose= initial_pose_2D;
+    initial_pose.pose.pose.position.z= all_layer_information_.at(current_robot_layer_).map.info.origin.position.z;
+    initial_pose_pub_.publish(initial_pose);
+}
+
+
 void HectorChangeMap::publishMapForLayer(){
     //stair traversal layer are always numberd uneven
     if(!all_layer_information_.empty()){
         //publish map for layer
         ROS_DEBUG("provide map for layer, %i", current_robot_layer_);
-        map_pub_.publish(all_layer_information_.at(current_robot_layer_).map);
+        if(current_robot_layer_<all_layer_information_.size()){
+            map_pub_.publish(all_layer_information_.at(current_robot_layer_).map);
+        }else{
+            ROS_ERROR("[hector_change_map] no map available for layer %i", current_robot_layer_);
+        }
 
         if(!all_layer_information_.at(current_robot_layer_).staircases.size()==0){
             //publish stairs information for layer
@@ -288,6 +306,13 @@ void HectorChangeMap::loadStairsInfo(std::string file_to_load){
     orientation.pose.orientation.w=temp.getW();
 
     insertStairs(bottom1, bottom2, top1, top2, direction, yaw, pitch, number_of_points, orientation, layer);
+}
+
+void HectorChangeMap::dynamic_recf_cb(hector_change_map::HectorChangeMapConfig &config, uint32_t level)
+{
+    ROS_INFO("Reconfigure Callback enterd");
+    current_robot_layer_=config.current_robot_layer;
+    publishMapForLayer();
 }
 
 }

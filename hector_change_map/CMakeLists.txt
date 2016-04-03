@@ -9,6 +9,12 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   map_server
   hector_stair_detection_msgs
+  dynamic_reconfigure
+)
+
+#add dynamic reconfigure api
+generate_dynamic_reconfigure_options(
+  cfg/HectorChangeMap.cfg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,7 +113,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
    include/${PROJECT_NAME}/hector_change_map.h
  )
 
-add_dependencies(hector_change_map ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable
  add_executable(hector_change_map_node src/hector_change_map_node.cpp)

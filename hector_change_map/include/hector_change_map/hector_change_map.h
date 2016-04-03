@@ -19,6 +19,9 @@
 #include <libgen.h>
 #include <yaml-cpp/yaml.h>
 #include <map_server/image_loader.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <dynamic_reconfigure/server.h>
+#include <hector_change_map/HectorChangeMapConfig.h>
 
 namespace hector_change_map{
 
@@ -52,8 +55,10 @@ struct layer_information {
           ros::Publisher stairs_information_reset_pub_;
           ros::Publisher stairs_information_pub_;
           ros::Publisher stairs_information_pub_debug_;
+          ros::Publisher initial_pose_pub_;
 
           ros::Subscriber change_layer_sub_;
+          ros::Subscriber initial_pose_2D_sub_;
 
           tf::TransformListener tf_listener_;
 
@@ -68,6 +73,7 @@ struct layer_information {
           int current_robot_layer_;
 
           void ChangeLayerCB(const hector_change_layer_msgs::Change_layer_msg layer_msg);
+          void InitialPose2DCB(const geometry_msgs::PoseWithCovarianceStamped initial_pose_2D);
 
           void publishMapForLayer();
 
@@ -75,6 +81,11 @@ struct layer_information {
           void publishStairsInformationForLayer(int layer);
           void loadMap(std::string file_to_load);
           void loadStairsInfo(std::string file_to_load);
+
+          //Dynamic reconfigure
+          dynamic_reconfigure::Server<hector_change_map::HectorChangeMapConfig> dynamic_recf_server;
+          dynamic_reconfigure::Server<hector_change_map::HectorChangeMapConfig>::CallbackType dynamic_recf_type;
+          void dynamic_recf_cb(hector_change_map::HectorChangeMapConfig &config, uint32_t level);
 
     };
 }
