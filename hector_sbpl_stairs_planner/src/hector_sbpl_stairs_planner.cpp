@@ -583,7 +583,7 @@ ROS_INFO("[hector_stairs_planner] number of stairs: %i", all_stairs_information_
         path_w_flipper.segment.poses.push_back(pose);
         //default
         path_w_flipper.flipperFront=-M_PI_2;
-        path_w_flipper.flipperRear=-M_PI_2;
+        path_w_flipper.flipperRear=M_PI_2;
 
         if(sbpl_path[i].flipperFlag==true){
             //insert current flipper pos
@@ -688,8 +688,8 @@ ROS_INFO("[hector_stairs_planner] number of stairs: %i", all_stairs_information_
             if(robotMovesForward==false){
                 double tempPos;
                 tempPos=path_w_flipper.flipperFront;
-                path_w_flipper.flipperFront=path_w_flipper.flipperRear;
-                path_w_flipper.flipperRear=tempPos;
+                path_w_flipper.flipperFront=(-1)*path_w_flipper.flipperRear;
+                path_w_flipper.flipperRear=(-1)*tempPos;
             }
 
             refined_path_.path.push_back(path_w_flipper);
