@@ -44,6 +44,7 @@ message_generation
  add_message_files(
    FILES
    Change_layer_msg.msg
+   MapLayerList.msg
  )
 
 ## Generate services in the 'srv' folder

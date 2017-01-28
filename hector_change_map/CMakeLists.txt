@@ -9,7 +9,11 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   map_server
   hector_stair_detection_msgs
+        hector_change_layer_msgs
   dynamic_reconfigure
+        tf2_ros
+        tf2
+        tf2_geometry_msgs
 )
 
 #add dynamic reconfigure api
@@ -76,10 +80,10 @@ endif(NEW_YAMLCPP_FOUND)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
+#generate_messages(
 #   DEPENDENCIES
 #   std_msgs
-# )
+#)
 
 ###################################
 ## catkin specific configuration ##
@@ -93,13 +97,14 @@ endif(NEW_YAMLCPP_FOUND)
 catkin_package(
  INCLUDE_DIRS include
   LIBRARIES hector_change_map
-  CATKIN_DEPENDS roscpp tf map_server hector_stair_detection_msgs
+  CATKIN_DEPENDS roscpp tf map_server hector_stair_detection_msgs hector_change_layer_msgs tf2_ros tf2 tf2_geometry_msgs
   DEPENDS system_lib
 )
 
 ###########
 ## Build ##
 ###########
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${CMAKE_CXX_FLAGS}")
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -125,7 +130,11 @@ add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGET
 ## Specify libraries to link a library or executable target against
  target_link_libraries(hector_change_map_node
    hector_change_map
-   yaml-cpp
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(hector_change_map
+    yaml-cpp
    ${catkin_LIBRARIES}
 )
 

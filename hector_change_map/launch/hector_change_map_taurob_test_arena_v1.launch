@@ -2,10 +2,16 @@
 <launch>
 
   <arg name="scenario_name" default="argo_taurob_test_arena_v1"/>
-<param name="map_0_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map.yaml" />
-<param name="map_1_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_one.yaml" />
-<param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml" />   
-<param name="stairs_info_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/stairsInfoLayer1.yaml" />
-<node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen"/>
+  <node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen">
+    <param name="frame_id" value="world" />
+    <rosparam param="maps" subst_value="True">
+    - topic: "map1"
+      file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map.yaml
+    - topic: "map2"
+      file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_one.yaml
+    - topic: "map3"
+      file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml
+    </rosparam>
+  </node>
 
 </launch>

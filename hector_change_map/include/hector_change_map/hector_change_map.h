@@ -22,72 +22,65 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <dynamic_reconfigure/server.h>
 #include <hector_change_map/HectorChangeMapConfig.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 
-namespace hector_change_map{
+namespace hector_change_map {
 
-struct staircase {
-    Eigen::Vector3f bottom1;
-    Eigen::Vector3f bottom2;
-    Eigen::Vector3f top1;
-    Eigen::Vector3f top2;
-    Eigen::Vector3f direction;
-    float yaw;
-    float pitch;
-    float number_of_points;
-    geometry_msgs::PoseStamped orientation;
+struct LayerInformation {
+  nav_msgs::OccupancyGrid map;
 };
 
-struct layer_information {
-    nav_msgs::OccupancyGrid map;
-    std::vector<staircase> staircases;
+class HectorChangeMap {
+
+public:
+ HectorChangeMap();
+ virtual ~HectorChangeMap();
+
+protected:
+  ros::NodeHandle nh_;
+
+  ros::Publisher map_pub_;
+  ros::Publisher initial_pose_pub_;
+  ros::Publisher map_list_pub_;
+
+  ros::Subscriber change_layer_sub_;
+  ros::Subscriber initial_pose_2D_sub_;
+  ros::Subscriber robot_pose_sub_;
+  
+  tf2_ros::StaticTransformBroadcaster static_broadcaster_;
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
+
+  std::vector<LayerInformation> all_layer_information_;
+  std::vector<ros::Publisher> static_layer_publishers_;
+  
+  std::string frame_id_;
+  double robot_layer_distance_threshold_;
+  
+  int current_robot_layer_;
+  
+  void changeCurrentLayer(int new_layer);
+
+  void ChangeLayerCB(const hector_change_layer_msgs::Change_layer_msg layer_msg);
+  void InitialPose2DCB(const geometry_msgs::PoseWithCovarianceStamped initial_pose_2D);
+  void RobotPoseChangedCB(const geometry_msgs::PoseStamped::ConstPtr& pose);
+
+  void publishMapForCurrentLayer();
+  
+  LayerInformation & loadMap(std::string file_to_load);
+  
+  void publishMapStaticTFInfo(std::string map_frame, tf::Vector3 translation, tf::Quaternion rotation);
+  
+  void addStaticMapPublisher(const LayerInformation& layer, std::string topic);
+
+  //Dynamic reconfigure
+  dynamic_reconfigure::Server<hector_change_map::HectorChangeMapConfig> dynamic_recf_server;
+  dynamic_reconfigure::Server<hector_change_map::HectorChangeMapConfig>::CallbackType dynamic_recf_type;
+  void dynamic_recf_cb(hector_change_map::HectorChangeMapConfig &config, uint32_t level);
+
 };
 
-    class HectorChangeMap {
-
-    public:
-         HectorChangeMap();
-         virtual ~HectorChangeMap();
-
-    protected:
-          ros::NodeHandle nh_;
-
-          ros::Publisher map_pub_;
-          ros::Publisher stairs_information_reset_pub_;
-          ros::Publisher stairs_information_pub_;
-          ros::Publisher stairs_information_pub_debug_;
-          ros::Publisher initial_pose_pub_;
-
-          ros::Subscriber change_layer_sub_;
-          ros::Subscriber initial_pose_2D_sub_;
-
-          tf::TransformListener tf_listener_;
-
-          std::vector<layer_information> all_layer_information_;
-
-          std::string map_1_file_;
-          std::string map_0_file_;
-          std::string map_2_file_;
-          std::string stairs_info_file_;
-          std::string frame_id_;
-
-          int current_robot_layer_;
-
-          void ChangeLayerCB(const hector_change_layer_msgs::Change_layer_msg layer_msg);
-          void InitialPose2DCB(const geometry_msgs::PoseWithCovarianceStamped initial_pose_2D);
-
-          void publishMapForLayer();
-
-          void insertStairs(Eigen::Vector3f bottom1, Eigen::Vector3f bottom2, Eigen::Vector3f top1, Eigen::Vector3f top2, Eigen::Vector3f direction, float yaw, float pitch, float number_of_points, geometry_msgs::PoseStamped orientation, int layer);
-          void publishStairsInformationForLayer(int layer);
-          void loadMap(std::string file_to_load);
-          void loadStairsInfo(std::string file_to_load);
-
-          //Dynamic reconfigure
-          dynamic_reconfigure::Server<hector_change_map::HectorChangeMapConfig> dynamic_recf_server;
-          dynamic_reconfigure::Server<hector_change_map::HectorChangeMapConfig>::CallbackType dynamic_recf_type;
-          void dynamic_recf_cb(hector_change_map::HectorChangeMapConfig &config, uint32_t level);
-
-    };
-}
+} // namespace hector_change_map
 
 #endif

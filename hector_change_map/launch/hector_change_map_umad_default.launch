@@ -1,11 +1,49 @@
 <?xml version="1.0"?>
 <launch>
-
   <arg name="scenario_name" default="umad_default"/>
-<param name="map_0_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map.yaml" />
-<param name="map_1_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_one.yaml" />
-<param name="map_2_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml" />   
-<param name="stairs_info_file" value="$(find argo_scenario_data)/maps/argo_$(arg scenario_name)/stairsInfoLayer1.yaml" />
-<node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen"/>
+
+  <node name="hector_change_map_node" pkg="hector_change_map" type="hector_change_map_node" respawn="true" output="screen">
+    <param name="frame_id" value="world" />
+    
+    <!-- FIXME: generate grid maps for floors 3-5 instead of always using the map from floor 2-->
+    <rosparam param="maps" subst_value="True">
+    - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map.yaml
+      publish_map:
+        topic: flat_layer_map1
+        frame_id: flat_layer_map1_frame
+        publish_frame:
+          translation: [0.0, 0.0, 0.0]
+          rotation: [0.0, 0.0, 0.0, 1.0]
+    - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_one.yaml
+    - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml
+      publish_map:
+        topic: flat_layer_map2
+        frame_id: flat_layer_map2_frame
+        publish_frame:
+          translation: [0.0, 0.0, 2.5]
+          rotation: [0.0, 0.0, 0.0, 1.0]
+    - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml
+      publish_map:
+        topic: flat_layer_map3
+        frame_id: flat_layer_map3_frame
+        publish_frame:
+          translation: [0.0, 0.0, 5.0]
+          rotation: [0.0, 0.0, 0.0, 1.0]
+    - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml
+      publish_map:
+        topic: flat_layer_map4
+        frame_id: flat_layer_map4_frame
+        publish_frame:
+          translation: [0.0, 0.0, 7.5]
+          rotation: [0.0, 0.0, 0.0, 1.0]
+    - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml
+      publish_map:
+        topic: flat_layer_map5
+        frame_id: flat_layer_map5_frame
+        publish_frame:
+          translation: [0.0, 0.0, 10.0]
+          rotation: [0.0, 0.0, 0.0, 1.0]
+    </rosparam>
+  </node>
 
 </launch>
