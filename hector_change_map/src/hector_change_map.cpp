@@ -3,6 +3,7 @@
 #include <XmlRpcException.h>
 #include <hector_change_layer_msgs/MapLayerList.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include <hazard_model_lib/hazard_model_grid_map.h>
 
 namespace hector_change_map{
 
@@ -26,7 +27,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
       if(map_params.hasMember("publish_map")) {
         XmlRpc::XmlRpcValue& publish_params = map_params["publish_map"];
         std::string map_frame = publish_params["frame_id"];
-        layer.map.header.frame_id = map_frame;
+        layer.current_map.header.frame_id = layer.original_map.header.frame_id = map_frame;
         
         std::string topic = publish_params["topic"];
         layers_msg.map_topics.push_back(topic);
@@ -60,6 +61,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   change_layer_sub_ = nh_.subscribe<hector_change_layer_msgs::Change_layer_msg>("/hector_change_map/change_layer", 1, &HectorChangeMap::ChangeLayerCB, this);
   initial_pose_2D_sub_ = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose_2D", 1, &HectorChangeMap::InitialPose2DCB, this);
   robot_pose_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/robot_pose", 1, &HectorChangeMap::RobotPoseChangedCB, this);
+  hazard_model_sub_ = nh_.subscribe("hazard_model", 1, &HectorChangeMap::HazardModelCB, this);
   
   dynamic_recf_type = boost::bind(&HectorChangeMap::dynamic_recf_cb, this, _1, _2);
   dynamic_recf_server.setCallback(dynamic_recf_type);
@@ -68,7 +70,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   pnh.param("layer_distance_threshold", robot_layer_distance_threshold_, 0.5);
   
   //provide initial map
-  map_pub_.publish(all_layer_information_.at(0).map);
+  map_pub_.publish(all_layer_information_.at(0).current_map);
   map_list_pub_.publish(layers_msg);
 }
 
@@ -85,7 +87,7 @@ void HectorChangeMap::InitialPose2DCB(const geometry_msgs::PoseWithCovarianceSta
   //initial pose 2D <=> z always 0
   geometry_msgs::PoseWithCovarianceStamped initial_pose;
   initial_pose= initial_pose_2D;
-  initial_pose.pose.pose.position.z= all_layer_information_.at(current_robot_layer_).map.info.origin.position.z;
+  initial_pose.pose.pose.position.z= all_layer_information_.at(current_robot_layer_).current_map.info.origin.position.z;
   initial_pose_pub_.publish(initial_pose);
 }
 
@@ -95,7 +97,7 @@ void HectorChangeMap::publishMapForCurrentLayer(){
     //publish map for layer
     ROS_DEBUG("provide map for layer, %i", current_robot_layer_);
     if(current_robot_layer_< (int) all_layer_information_.size()){
-      nav_msgs::OccupancyGrid map = all_layer_information_.at(current_robot_layer_).map;
+      nav_msgs::OccupancyGrid map = all_layer_information_.at(current_robot_layer_).current_map;
       map.header.frame_id = frame_id_;
       map_pub_.publish(map);
     }else{
@@ -138,13 +140,14 @@ LayerInformation & HectorChangeMap::loadMap(std::string file_to_load) {
   nav_msgs::GetMap::Response map_resp_;
   double origin_for_mapserver[]= {origin[0], origin[1], origin[3]};
   map_server::loadMapFromFile(&map_resp_, mapfname.c_str(),res,negate,occ_th,free_th, origin_for_mapserver);
-  layer_info.map=map_resp_.map;
-  layer_info.map.info.origin.position.x= origin[0];
-  layer_info.map.info.origin.position.y= origin[1];
-  layer_info.map.info.origin.position.z= origin[2];
-  layer_info.map.info.map_load_time = ros::Time::now();
-  layer_info.map.header.frame_id = frame_id_;
-  layer_info.map.header.stamp = ros::Time::now();
+  layer_info.original_map=map_resp_.map;
+  layer_info.original_map.info.origin.position.x= origin[0];
+  layer_info.original_map.info.origin.position.y= origin[1];
+  layer_info.original_map.info.origin.position.z= origin[2];
+  layer_info.original_map.info.map_load_time = ros::Time::now();
+  layer_info.original_map.header.frame_id = frame_id_;
+  layer_info.original_map.header.stamp = ros::Time::now();
+  layer_info.current_map = layer_info.original_map;
   all_layer_information_.push_back(layer_info);
   
   return all_layer_information_.back();
@@ -168,23 +171,81 @@ void HectorChangeMap::publishMapStaticTFInfo(std::string map_frame, tf::Vector3 
   static_broadcaster_.sendTransform(static_transformStamped);
 }
 
-void HectorChangeMap::addStaticMapPublisher(const LayerInformation &layer, std::string topic) {
+void HectorChangeMap::addStaticMapPublisher(LayerInformation &layer, std::string topic) {
+  layer.publisher_index = static_layer_publishers_.size();
   static_layer_publishers_.emplace_back();
   ros::Publisher& pub = static_layer_publishers_.back();
   pub = nh_.advertise<nav_msgs::OccupancyGrid>(topic, 10, true);
-  pub.publish(layer.map);
+  pub.publish(layer.current_map);
 }
 
 void HectorChangeMap::RobotPoseChangedCB(const geometry_msgs::PoseStamped::ConstPtr &pose_msg) {
-  int best_match = -1;
-  double best_dist = std::numeric_limits<double>::max();
-  
   // remove leading slash since this is not allowed in tf2
   geometry_msgs::PoseStamped pose = *pose_msg;
   pose.header.frame_id = tf::strip_leading_slash(pose.header.frame_id);
   
+  int layer = getLayerFromPose(pose);
+  if(layer >= 0)
+    changeCurrentLayer(layer);
+}
+
+void HectorChangeMap::changeCurrentLayer(int new_layer) {
+  if(new_layer >= 0 && new_layer < (int)all_layer_information_.size()) {
+    if(current_robot_layer_ != new_layer) {
+      current_robot_layer_ = new_layer;
+      publishMapForCurrentLayer();
+    }
+  } else {
+    ROS_ERROR("[hector_change_map] no map available for layer %i", new_layer);
+  }
+}
+
+void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel &model) {
+  static std::string occupancy("occupancy");
+  
+  // TODO: take a diff between previous model and apply changes only instead of completely re-filling grids
+  
+  // reset all grids to original
+  for(auto& layer_info: all_layer_information_) {
+    grid_map::GridMapRosConverter::fromOccupancyGrid(layer_info.original_map, occupancy, layer_info.grid_map);
+  }
+  
+  // enter hazards in grid maps
+  for(auto& hazard: model.hazard_objects) {
+    if (!hazard.id.empty() &&
+          (hazard.type == hazard_model_msgs::HazardObject::TYPE_POSITIVE_OBSTACLE
+          || hazard.type == hazard_model_msgs::HazardObject::TYPE_NEGATIVE_OBSTACLE
+          || hazard.type == hazard_model_msgs::HazardObject::TYPE_OVERHANGING_OBSTACLE)
+        && hazard.state == hazard_model_msgs::HazardObject::STATE_ACTIVE) {
+      int layer = getLayerFromPose(hazard.pose);
+      if(layer < 0) {
+        ROS_WARN_STREAM("Could not add hazard to grid maps since layer could not be determined");
+      } else {
+        LayerInformation& layer_info = all_layer_information_.at(layer);
+        HazardModelGridMap::addHazard(layer_info.grid_map, hazard);
+      }
+    }
+  }
+  
+  // apply and publish all changes
+  for(auto& info: all_layer_information_) {
+    grid_map::GridMapRosConverter::toOccupancyGrid(info.grid_map, occupancy, 0, 100, info.current_map);
+    
+    int pub_index = info.publisher_index;
+    if(pub_index >= 0) {
+      static_layer_publishers_.at(pub_index).publish(info.current_map);
+    }
+  }
+  
+  publishMapForCurrentLayer();
+}
+
+int HectorChangeMap::getLayerFromPose(geometry_msgs::PoseStamped const &pose) {
+  int best_match = -1;
+  double best_dist = std::numeric_limits<double>::max();
+  
   for(size_t i = 0; i < all_layer_information_.size(); i++) {
-    auto const& map = all_layer_information_.at(i).map;
+    auto const& map = all_layer_information_.at(i).current_map;
     
     try {
       geometry_msgs::PoseStamped pose_transformed = tf_buffer_.transform(pose, map.header.frame_id, ros::Duration(1));
@@ -198,19 +259,10 @@ void HectorChangeMap::RobotPoseChangedCB(const geometry_msgs::PoseStamped::Const
     }
   }
   
-  if(best_match >= 0 && best_dist <= robot_layer_distance_threshold_) {
-    changeCurrentLayer(best_match);
-  }
-}
-
-void HectorChangeMap::changeCurrentLayer(int new_layer) {
-  if(new_layer >= 0 && new_layer < (int)all_layer_information_.size()) {
-    if(current_robot_layer_ != new_layer) {
-      current_robot_layer_ = new_layer;
-      publishMapForCurrentLayer();
-    }
+  if(best_dist <= robot_layer_distance_threshold_) {
+    return best_match;
   } else {
-    ROS_ERROR("[hector_change_map] no map available for layer %i", new_layer);
+    return -1;
   }
 }
   

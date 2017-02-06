@@ -9,11 +9,12 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   map_server
   hector_stair_detection_msgs
-        hector_change_layer_msgs
+  hector_change_layer_msgs
   dynamic_reconfigure
-        tf2_ros
-        tf2
-        tf2_geometry_msgs
+  tf2_ros
+  tf2
+  tf2_geometry_msgs
+  hazard_model_lib
 )
 
 #add dynamic reconfigure api
