@@ -61,7 +61,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   change_layer_sub_ = nh_.subscribe<hector_change_layer_msgs::Change_layer_msg>("/hector_change_map/change_layer", 1, &HectorChangeMap::ChangeLayerCB, this);
   initial_pose_2D_sub_ = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose_2D", 1, &HectorChangeMap::InitialPose2DCB, this);
   robot_pose_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/robot_pose", 1, &HectorChangeMap::RobotPoseChangedCB, this);
-  hazard_model_sub_ = nh_.subscribe("hazard_model", 1, &HectorChangeMap::HazardModelCB, this);
+  hazard_model_sub_ = nh_.subscribe("/hazard_model/hazard_model", 1, &HectorChangeMap::HazardModelCB, this);
   
   dynamic_recf_type = boost::bind(&HectorChangeMap::dynamic_recf_cb, this, _1, _2);
   dynamic_recf_server.setCallback(dynamic_recf_type);
