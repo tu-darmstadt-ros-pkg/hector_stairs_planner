@@ -96,12 +96,30 @@ void HectorChangeMap::publishMapForCurrentLayer(){
   if(!all_layer_information_.empty()){
     //publish map for layer
     ROS_DEBUG("provide map for layer, %i", current_robot_layer_);
-    if(current_robot_layer_< (int) all_layer_information_.size()){
+    if(current_robot_layer_< (int) all_layer_information_.size())
+    {
       nav_msgs::OccupancyGrid map = all_layer_information_.at(current_robot_layer_).current_map;
+
+      try
+      {
+        geometry_msgs::PoseStamped pose;
+        pose.header.frame_id = map.header.frame_id;
+        pose.header.stamp = ros::Time::now();
+        pose.pose = map.info.origin;
+        pose = tf_buffer_.transform(pose, frame_id_, ros::Duration(1));
+        map.info.origin = pose.pose;
+      }
+      catch (const tf2::TransformException& ex)
+      {
+        ROS_WARN_STREAM("[HectorChangeMap] Could not transform map pose from frame '" << map.header.frame_id << "' to frame '" << frame_id_ << "': " <<ex.what());
+      }
+
       map.header.frame_id = frame_id_;
       map_pub_.publish(map);
-    }else{
-      ROS_ERROR("[hector_change_map] no map available for layer %i", current_robot_layer_);
+    }
+    else
+    {
+      ROS_ERROR("[HectorChangeMap] no map available for layer %i", current_robot_layer_);
     }
   }
 }
@@ -116,7 +134,6 @@ LayerInformation & HectorChangeMap::loadMap(std::string file_to_load) {
   YAML::Node file = YAML::LoadFile(file_to_load.c_str());
   
   res= file["resolution"].as<double>();
-  mapfname= file["image"].as<std::string>();
   negate=file["negate"].as<int>();
   occ_th=file["occupied_thresh"].as<double>();
   free_th=file["free_thresh"].as<double>();
