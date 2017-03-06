@@ -66,11 +66,11 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   dynamic_recf_type = boost::bind(&HectorChangeMap::dynamic_recf_cb, this, _1, _2);
   dynamic_recf_server.setCallback(dynamic_recf_type);
   
-  pnh.param("current_robot_layer", current_robot_layer_, 0);
+  pnh.param("current_robot_layer", current_robot_layer_, -1);
   pnh.param("layer_distance_threshold", robot_layer_distance_threshold_, 0.5);
   
   //provide initial map
-  map_pub_.publish(all_layer_information_.at(0).current_map);
+  //map_pub_.publish(all_layer_information_.at(0).current_map);
   map_list_pub_.publish(layers_msg);
 }
 
