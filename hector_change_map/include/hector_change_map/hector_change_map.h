@@ -74,7 +74,7 @@ protected:
   void RobotPoseChangedCB(const geometry_msgs::PoseStamped::ConstPtr& pose);
   void HazardModelCB(const hazard_model_msgs::HazardModel& model);
 
-  void publishMapForCurrentLayer();
+  void publishMapForCurrentLayer(bool original = true);
   void publishResetSignal() const;
   
   LayerInformation & loadMap(std::string file_to_load);

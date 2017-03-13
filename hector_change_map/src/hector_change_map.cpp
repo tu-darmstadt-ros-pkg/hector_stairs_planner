@@ -95,7 +95,7 @@ void HectorChangeMap::InitialPose2DCB(const geometry_msgs::PoseWithCovarianceSta
   initial_pose_pub_.publish(initial_pose);
 }
 
-void HectorChangeMap::publishMapForCurrentLayer()
+void HectorChangeMap::publishMapForCurrentLayer(bool original)
 {
   //stair traversal layer are always numberd uneven
   if(!all_layer_information_.empty())
@@ -122,10 +122,14 @@ void HectorChangeMap::publishMapForCurrentLayer()
       }
 
       map.header.frame_id = frame_id_;
-      original_map.header = map.header;
-      original_map.info = map.info;
       map_pub_.publish(map);
-      original_map_pub_.publish(original_map);
+
+      if (original)
+      {
+        original_map.header = map.header;
+        original_map.info = map.info;
+        original_map_pub_.publish(original_map);
+      }
     }
     else
     {
@@ -264,7 +268,7 @@ void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel& model)
       static_layer_publishers_.at(pub_index).publish(layer_info.current_map);
   }
   
-  publishMapForCurrentLayer();
+  publishMapForCurrentLayer(false);
 }
 
 int HectorChangeMap::getLayerFromPose(geometry_msgs::PoseStamped const &pose) {
