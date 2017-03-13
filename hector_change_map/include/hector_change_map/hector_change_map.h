@@ -47,6 +47,7 @@ protected:
   ros::Publisher map_pub_;
   ros::Publisher initial_pose_pub_;
   ros::Publisher map_list_pub_;
+  ros::Publisher reset_pub_;
 
   ros::Subscriber change_layer_sub_;
   ros::Subscriber initial_pose_2D_sub_;
@@ -73,6 +74,7 @@ protected:
   void HazardModelCB(const hazard_model_msgs::HazardModel& model);
 
   void publishMapForCurrentLayer();
+  void publishResetSignal() const;
   
   LayerInformation & loadMap(std::string file_to_load);
   

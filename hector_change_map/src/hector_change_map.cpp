@@ -3,7 +3,9 @@
 #include <XmlRpcException.h>
 #include <hector_change_layer_msgs/MapLayerList.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include <std_msgs/String.h>
 #include <hazard_model_lib/hazard_model_grid_map.h>
+#include <hazard_model_lib/hazard_model_core.h>
 
 namespace hector_change_map{
 
@@ -57,6 +59,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   map_pub_=  nh_.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
   initial_pose_pub_= nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 100);
   map_list_pub_ = nh_.advertise<hector_change_layer_msgs::MapLayerList>("/layer_list", 10, true);
+  reset_pub_ = nh_.advertise<std_msgs::String>("/reset", 10, true);
   
   change_layer_sub_ = nh_.subscribe<hector_change_layer_msgs::Change_layer_msg>("/hector_change_map/change_layer", 1, &HectorChangeMap::ChangeLayerCB, this);
   initial_pose_2D_sub_ = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose_2D", 1, &HectorChangeMap::InitialPose2DCB, this);
@@ -122,6 +125,11 @@ void HectorChangeMap::publishMapForCurrentLayer(){
       ROS_ERROR("[HectorChangeMap] no map available for layer %i", current_robot_layer_);
     }
   }
+}
+
+void HectorChangeMap::publishResetSignal() const
+{
+  reset_pub_.publish(std_msgs::String());
 }
 
 LayerInformation & HectorChangeMap::loadMap(std::string file_to_load) {
@@ -211,6 +219,7 @@ void HectorChangeMap::changeCurrentLayer(int new_layer) {
     if(current_robot_layer_ != new_layer) {
       current_robot_layer_ = new_layer;
       publishMapForCurrentLayer();
+      publishResetSignal();
     }
   } else {
     ROS_ERROR("[hector_change_map] no map available for layer %i", new_layer);
@@ -229,11 +238,7 @@ void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel &model)
   
   // enter hazards in grid maps
   for(auto& hazard: model.hazard_objects) {
-    if (!hazard.id.empty() &&
-          (hazard.type == hazard_model_msgs::HazardObject::TYPE_POSITIVE_OBSTACLE
-          || hazard.type == hazard_model_msgs::HazardObject::TYPE_NEGATIVE_OBSTACLE
-          || hazard.type == hazard_model_msgs::HazardObject::TYPE_OVERHANGING_OBSTACLE)
-        && hazard.state == hazard_model_msgs::HazardObject::STATE_ACTIVE) {
+    if (HazardModelCore::isActiveHazard(hazard)) {
       int layer = getLayerFromPose(hazard.pose);
       if(layer < 0) {
         ROS_WARN_STREAM("Could not add hazard to grid maps since layer could not be determined");
