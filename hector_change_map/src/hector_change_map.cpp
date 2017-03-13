@@ -55,8 +55,9 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
     ROS_WARN("change map node: no maps were specified. Doing nothing.");
     return;
   }
-  
+
   map_pub_=  nh_.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
+  original_map_pub_=  nh_.advertise<nav_msgs::OccupancyGrid>("/original_map", 10, true);
   initial_pose_pub_= nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 100);
   map_list_pub_ = nh_.advertise<hector_change_layer_msgs::MapLayerList>("/layer_list", 10, true);
   reset_pub_ = nh_.advertise<std_msgs::String>("/reset", 10, true);
@@ -94,14 +95,17 @@ void HectorChangeMap::InitialPose2DCB(const geometry_msgs::PoseWithCovarianceSta
   initial_pose_pub_.publish(initial_pose);
 }
 
-void HectorChangeMap::publishMapForCurrentLayer(){
+void HectorChangeMap::publishMapForCurrentLayer()
+{
   //stair traversal layer are always numberd uneven
-  if(!all_layer_information_.empty()){
+  if(!all_layer_information_.empty())
+  {
     //publish map for layer
     ROS_DEBUG("provide map for layer, %i", current_robot_layer_);
     if(current_robot_layer_< (int) all_layer_information_.size())
     {
       nav_msgs::OccupancyGrid map = all_layer_information_.at(current_robot_layer_).current_map;
+      nav_msgs::OccupancyGrid original_map = all_layer_information_.at(current_robot_layer_).original_map;
 
       try
       {
@@ -118,7 +122,10 @@ void HectorChangeMap::publishMapForCurrentLayer(){
       }
 
       map.header.frame_id = frame_id_;
+      original_map.header = map.header;
+      original_map.info = map.info;
       map_pub_.publish(map);
+      original_map_pub_.publish(original_map);
     }
     else
     {
@@ -226,37 +233,35 @@ void HectorChangeMap::changeCurrentLayer(int new_layer) {
   }
 }
 
-void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel &model) {
+void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel& model)
+{
   static std::string occupancy("occupancy");
   
   // TODO: take a diff between previous model and apply changes only instead of completely re-filling grids
-  
-  // reset all grids to original
-  for(auto& layer_info: all_layer_information_) {
+
+  for (LayerInformation& layer_info : all_layer_information_)
+  {
+    // obtain z height of map layer
+    geometry_msgs::PoseStamped pose;
+    pose.header.frame_id = layer_info.original_map.header.frame_id;
+    pose.header.stamp = ros::Time::now();
+    pose.pose = layer_info.original_map.info.origin;
+    pose = tf_buffer_.transform(pose, frame_id_, ros::Duration(1));
+    double map_height = pose.pose.position.z;
+
+    // reset grid map to original
     grid_map::GridMapRosConverter::fromOccupancyGrid(layer_info.original_map, occupancy, layer_info.grid_map);
-  }
-  
-  // enter hazards in grid maps
-  for(auto& hazard: model.hazard_objects) {
-    if (HazardModelCore::isActiveHazard(hazard)) {
-      int layer = getLayerFromPose(hazard.pose);
-      if(layer < 0) {
-        ROS_WARN_STREAM("Could not add hazard to grid maps since layer could not be determined");
-      } else {
-        LayerInformation& layer_info = all_layer_information_.at(layer);
-        HazardModelGridMap::addHazard(layer_info.grid_map, hazard);
-      }
-    }
-  }
-  
-  // apply and publish all changes
-  for(auto& info: all_layer_information_) {
-    grid_map::GridMapRosConverter::toOccupancyGrid(info.grid_map, occupancy, 0, 100, info.current_map);
+
+    // add hazards
+    HazardModelCore::addHazards(layer_info.grid_map, map_height, occupancy, occupancy, model);
+
+    // generate new current map
+    grid_map::GridMapRosConverter::toOccupancyGrid(layer_info.grid_map, occupancy, 0.0f, 1.0f, layer_info.current_map);
+    layer_info.current_map.header.stamp = ros::Time::now();
     
-    int pub_index = info.publisher_index;
-    if(pub_index >= 0) {
-      static_layer_publishers_.at(pub_index).publish(info.current_map);
-    }
+    int pub_index = layer_info.publisher_index;
+    if(pub_index >= 0)
+      static_layer_publishers_.at(pub_index).publish(layer_info.current_map);
   }
   
   publishMapForCurrentLayer();

@@ -45,6 +45,7 @@ protected:
   ros::NodeHandle nh_;
 
   ros::Publisher map_pub_;
+  ros::Publisher original_map_pub_;
   ros::Publisher initial_pose_pub_;
   ros::Publisher map_list_pub_;
   ros::Publisher reset_pub_;
