@@ -253,7 +253,7 @@ void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel& model)
     grid_map::GridMapRosConverter::fromOccupancyGrid(layer_info.original_map, occupancy, layer_info.grid_map);
 
     // add hazards
-    HazardModelCore::addHazards(layer_info.grid_map, map_height, occupancy, occupancy, model);
+    HazardModelCore::addHazardsToGridMap(layer_info.grid_map, map_height, occupancy, occupancy, model);
 
     // generate new current map
     grid_map::GridMapRosConverter::toOccupancyGrid(layer_info.grid_map, occupancy, 0.0f, 1.0f, layer_info.current_map);
