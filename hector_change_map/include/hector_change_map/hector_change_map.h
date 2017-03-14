@@ -30,7 +30,7 @@
 namespace hector_change_map {
 
 struct LayerInformation {
-  nav_msgs::OccupancyGrid original_map, current_map;
+  nav_msgs::OccupancyGrid original_map, traversability_map, current_map;
   grid_map::GridMap grid_map;
   int publisher_index = -1; // inside static_layer_publishers_, invalid if negative
 };
@@ -46,6 +46,7 @@ protected:
 
   ros::Publisher map_pub_;
   ros::Publisher original_map_pub_;
+  ros::Publisher traversability_map_pub_;
   ros::Publisher initial_pose_pub_;
   ros::Publisher map_list_pub_;
   ros::Publisher reset_pub_;
@@ -77,7 +78,7 @@ protected:
   void publishMapForCurrentLayer(bool original = true);
   void publishResetSignal() const;
   
-  LayerInformation & loadMap(std::string file_to_load);
+  nav_msgs::OccupancyGrid loadMap(std::string file_to_load);
   
   void publishMapStaticTFInfo(std::string map_frame, tf::Vector3 translation, tf::Quaternion rotation);
   

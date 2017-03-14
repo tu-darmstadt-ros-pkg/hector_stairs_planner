@@ -12,9 +12,9 @@ namespace hector_change_map{
 HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   ROS_INFO ("change map node started");
   ros::NodeHandle pnh("~");
-  
+
   hector_change_layer_msgs::MapLayerList layers_msg;
-  
+
   pnh.param("frame_id", frame_id_, std::string("world"));
   try {
     XmlRpc::XmlRpcValue map_list;
@@ -23,8 +23,14 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
     //load maps
     for (int i = 0; i < map_list.size(); i++) {
       XmlRpc::XmlRpcValue &map_params = map_list[i];
-      std::string file = map_params["file"];
-      LayerInformation& layer = loadMap(file);
+
+      LayerInformation layer;
+      layer.original_map = loadMap(static_cast<std::string>(map_params["file"]));
+      if (map_params.hasMember("file_traversability"))
+        layer.traversability_map = loadMap(static_cast<std::string>(map_params["file_traversability"]));
+      else
+        layer.traversability_map = layer.original_map;
+      layer.current_map = layer.original_map;
       
       if(map_params.hasMember("publish_map")) {
         XmlRpc::XmlRpcValue& publish_params = map_params["publish_map"];
@@ -45,6 +51,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   
         addStaticMapPublisher(layer, topic);
       }
+      all_layer_information_.push_back(layer);
     }
   } catch(XmlRpc::XmlRpcException const& e) {
     ROS_WARN_STREAM("change map node: could not load 'maps' parameters: " << e.getMessage() << ". Doing nothing.");
@@ -57,7 +64,8 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   }
 
   map_pub_=  nh_.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
-  original_map_pub_=  nh_.advertise<nav_msgs::OccupancyGrid>("/original_map", 10, true);
+  original_map_pub_= nh_.advertise<nav_msgs::OccupancyGrid>("/original_map", 10, true);
+  traversability_map_pub_ = nh_.advertise<nav_msgs::OccupancyGrid>("/traversability_map", 10, true);
   initial_pose_pub_= nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 100);
   map_list_pub_ = nh_.advertise<hector_change_layer_msgs::MapLayerList>("/layer_list", 10, true);
   reset_pub_ = nh_.advertise<std_msgs::String>("/reset", 10, true);
@@ -106,6 +114,7 @@ void HectorChangeMap::publishMapForCurrentLayer(bool original)
     {
       nav_msgs::OccupancyGrid map = all_layer_information_.at(current_robot_layer_).current_map;
       nav_msgs::OccupancyGrid original_map = all_layer_information_.at(current_robot_layer_).original_map;
+      nav_msgs::OccupancyGrid traversibility_map = all_layer_information_.at(current_robot_layer_).traversability_map;
 
       try
       {
@@ -129,6 +138,9 @@ void HectorChangeMap::publishMapForCurrentLayer(bool original)
         original_map.header = map.header;
         original_map.info = map.info;
         original_map_pub_.publish(original_map);
+        traversibility_map.header = map.header;
+        traversibility_map.info = map.info;
+        traversability_map_pub_.publish(traversibility_map);
       }
     }
     else
@@ -143,7 +155,8 @@ void HectorChangeMap::publishResetSignal() const
   reset_pub_.publish(std_msgs::String());
 }
 
-LayerInformation & HectorChangeMap::loadMap(std::string file_to_load) {
+nav_msgs::OccupancyGrid HectorChangeMap::loadMap(std::string file_to_load)
+{
   double res;
   std::string mapfname = "";
   double origin[3];
@@ -176,17 +189,16 @@ LayerInformation & HectorChangeMap::loadMap(std::string file_to_load) {
   nav_msgs::GetMap::Response map_resp_;
   double origin_for_mapserver[]= {origin[0], origin[1], origin[3]};
   map_server::loadMapFromFile(&map_resp_, mapfname.c_str(),res,negate,occ_th,free_th, origin_for_mapserver);
-  layer_info.original_map=map_resp_.map;
-  layer_info.original_map.info.origin.position.x= origin[0];
-  layer_info.original_map.info.origin.position.y= origin[1];
-  layer_info.original_map.info.origin.position.z= origin[2];
-  layer_info.original_map.info.map_load_time = ros::Time::now();
-  layer_info.original_map.header.frame_id = frame_id_;
-  layer_info.original_map.header.stamp = ros::Time::now();
-  layer_info.current_map = layer_info.original_map;
-  all_layer_information_.push_back(layer_info);
-  
-  return all_layer_information_.back();
+  nav_msgs::OccupancyGrid map;
+  map=map_resp_.map;
+  map.info.origin.position.x= origin[0];
+  map.info.origin.position.y= origin[1];
+  map.info.origin.position.z= origin[2];
+  map.info.map_load_time = ros::Time::now();
+  map.header.frame_id = frame_id_;
+  map.header.stamp = ros::Time::now();
+
+  return map;
 }
 
 void HectorChangeMap::dynamic_recf_cb(hector_change_map::HectorChangeMapConfig &config, uint32_t level)
