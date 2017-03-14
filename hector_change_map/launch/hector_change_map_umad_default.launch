@@ -17,6 +17,7 @@
           rotation: [0.0, 0.0, 0.0, 1.0]
     - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_one.yaml
     - file: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two.yaml
+      file_traversability: $(find argo_scenario_data)/maps/argo_$(arg scenario_name)/map_floor_two_traversability.yaml
       publish_map:
         topic: flat_layer_map2
         frame_id: flat_layer_map2_frame
