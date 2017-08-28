@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_geometry_msgs
   hazard_model_lib
+  hector_move_base_msgs
 )
 
 #add dynamic reconfigure api
