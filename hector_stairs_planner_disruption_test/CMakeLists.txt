@@ -81,7 +81,7 @@ catkin_package(
  INCLUDE_DIRS include
   LIBRARIES hector_stairs_planner_disruption_test
   CATKIN_DEPENDS roscpp gazebo_msgs
-  DEPENDS system_lib
+  #DEPENDS system_lib
 )
 
 ###########
