@@ -5,8 +5,6 @@
 #include <eigen3/Eigen/Eigen>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/OccupancyGrid.h>
-#include <hector_stair_detection_msgs/BorderAndOrientationOfStairs.h>
-#include <hector_stair_detection_msgs/PositionAndOrientaion.h>
 #include <math.h>
 #include <tf/tf.h>
 #include <hector_move_base_msgs/MoveBaseActionGoal.h>

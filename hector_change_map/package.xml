@@ -46,7 +46,6 @@
   <build_depend>tf2_ros</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>map_server</build_depend>
-  <build_depend>hector_stair_detection_msgs</build_depend>
   <build_depend>hector_change_layer_msgs</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
   <build_depend>hazard_model_lib</build_depend>
@@ -57,7 +56,6 @@
   <run_depend>tf2_ros</run_depend>
   <run_depend>tf2_geometry_msgs</run_depend>
   <run_depend>map_server</run_depend>
-  <run_depend>hector_stair_detection_msgs</run_depend>
   <run_depend>hector_change_layer_msgs</run_depend>
   <run_depend>dynamic_reconfigure</run_depend>
   <run_depend>hazard_model_lib</run_depend>
