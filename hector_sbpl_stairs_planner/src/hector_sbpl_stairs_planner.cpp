@@ -43,7 +43,7 @@ using namespace std;
 using namespace ros;
 using namespace hector_sbpl_stairs_planner;
 
-PLUGINLIB_DECLARE_CLASS(hector_sbpl_stairs_planner, HectorSbplStairsPlanner, hector_sbpl_stairs_planner::HectorSbplStairsPlanner, nav_core::BaseGlobalPlanner);
+PLUGINLIB_EXPORT_CLASS(hector_sbpl_stairs_planner::HectorSbplStairsPlanner, nav_core::BaseGlobalPlanner);
 
 class LatticeSCQ : public StateChangeQuery{
 public:
