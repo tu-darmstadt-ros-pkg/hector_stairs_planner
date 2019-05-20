@@ -99,7 +99,7 @@ catkin_package(
  INCLUDE_DIRS include
   LIBRARIES hector_change_map
   CATKIN_DEPENDS roscpp tf map_server hector_change_layer_msgs tf2_ros tf2 tf2_geometry_msgs hazard_model_lib
-  DEPENDS system_lib
+#  DEPENDS system_lib
 )
 
 ###########
