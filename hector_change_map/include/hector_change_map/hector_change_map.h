@@ -53,6 +53,8 @@ protected:
   ros::Subscriber initial_pose_2D_sub_;
   ros::Subscriber robot_pose_sub_;
   ros::Subscriber hazard_model_sub_;
+
+  ros::Timer map_pub_timer_;
   
   tf2_ros::StaticTransformBroadcaster static_broadcaster_;
   tf2_ros::Buffer tf_buffer_;
@@ -72,6 +74,7 @@ protected:
   void InitialPose2DCB(const geometry_msgs::PoseWithCovarianceStamped initial_pose_2D);
   void RobotPoseChangedCB(const geometry_msgs::PoseStamped::ConstPtr& pose);
   void HazardModelCB(const hazard_model_msgs::HazardModel& model);
+  void MapPubTimerCB(const ros::TimerEvent& event);
 
   void publishMapForCurrentLayer(bool original = true);
   void publishResetSignal() const;

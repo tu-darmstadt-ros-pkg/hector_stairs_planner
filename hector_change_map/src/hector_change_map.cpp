@@ -84,6 +84,11 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   //provide initial map
   //map_pub_.publish(all_layer_information_.at(0).current_map);
   map_list_pub_.publish(layers_msg);
+
+  double map_publish_period;
+  if (pnh.getParam("map_publish_period", map_publish_period)) {
+    map_pub_timer_ = pnh.createTimer(ros::Duration(map_publish_period), &HectorChangeMap::MapPubTimerCB, this);
+  }
 }
 
 HectorChangeMap::~HectorChangeMap()
@@ -280,6 +285,11 @@ void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel& model)
   }
   
   publishMapForCurrentLayer(false);
+}
+
+void HectorChangeMap::MapPubTimerCB(const ros::TimerEvent& event)
+{
+  publishMapForCurrentLayer();
 }
 
 int HectorChangeMap::getLayerFromPose(geometry_msgs::PoseStamped const &pose) {
