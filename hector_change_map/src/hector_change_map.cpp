@@ -4,8 +4,6 @@
 #include <hector_change_layer_msgs/MapLayerList.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include <std_msgs/String.h>
-#include <hazard_model_lib/hazard_model_grid_map.h>
-#include <hazard_model_lib/hazard_model_core.h>
 
 namespace hector_change_map{
 
@@ -73,7 +71,6 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   change_layer_sub_ = nh_.subscribe<hector_change_layer_msgs::Change_layer_msg>("/hector_change_map/change_layer", 1, &HectorChangeMap::ChangeLayerCB, this);
   initial_pose_2D_sub_ = nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose_2D", 1, &HectorChangeMap::InitialPose2DCB, this);
   robot_pose_sub_ = nh_.subscribe<geometry_msgs::PoseStamped>("/robot_pose", 1, &HectorChangeMap::RobotPoseChangedCB, this);
-  hazard_model_sub_ = nh_.subscribe("/hazard_model/hazard_model", 1, &HectorChangeMap::HazardModelCB, this);
   
   dynamic_recf_type = boost::bind(&HectorChangeMap::dynamic_recf_cb, this, _1, _2);
   dynamic_recf_server.setCallback(dynamic_recf_type);
@@ -251,40 +248,6 @@ void HectorChangeMap::changeCurrentLayer(int new_layer) {
   } else {
     ROS_ERROR("[hector_change_map] no map available for layer %i", new_layer);
   }
-}
-
-void HectorChangeMap::HazardModelCB(const hazard_model_msgs::HazardModel& model)
-{
-  static std::string occupancy("occupancy");
-  
-  // TODO: take a diff between previous model and apply changes only instead of completely re-filling grids
-
-  for (LayerInformation& layer_info : all_layer_information_)
-  {
-    // obtain z height of map layer
-    geometry_msgs::PoseStamped pose;
-    pose.header.frame_id = layer_info.original_map.header.frame_id;
-    pose.header.stamp = ros::Time::now();
-    pose.pose = layer_info.original_map.info.origin;
-    pose = tf_buffer_.transform(pose, frame_id_, ros::Duration(1));
-    double map_height = pose.pose.position.z;
-
-    // reset grid map to original
-    grid_map::GridMapRosConverter::fromOccupancyGrid(layer_info.original_map, occupancy, layer_info.grid_map);
-
-    // add hazards
-    HazardModelCore::addHazardsToGridMap(layer_info.grid_map, map_height, occupancy, occupancy, model);
-
-    // generate new current map
-    grid_map::GridMapRosConverter::toOccupancyGrid(layer_info.grid_map, occupancy, 0.0f, 1.0f, layer_info.current_map);
-    layer_info.current_map.header.stamp = ros::Time::now();
-    
-    int pub_index = layer_info.publisher_index;
-    if(pub_index >= 0)
-      static_layer_publishers_.at(pub_index).publish(layer_info.current_map);
-  }
-  
-  publishMapForCurrentLayer(false);
 }
 
 void HectorChangeMap::MapPubTimerCB(const ros::TimerEvent& event)

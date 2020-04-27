@@ -22,7 +22,6 @@
 #include <hector_change_map/HectorChangeMapConfig.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
-#include <hazard_model_msgs/HazardModel.h>
 #include <grid_map_core/GridMap.hpp>
 
 namespace hector_change_map {
@@ -52,7 +51,6 @@ protected:
   ros::Subscriber change_layer_sub_;
   ros::Subscriber initial_pose_2D_sub_;
   ros::Subscriber robot_pose_sub_;
-  ros::Subscriber hazard_model_sub_;
 
   ros::Timer map_pub_timer_;
   
@@ -73,7 +71,6 @@ protected:
   void ChangeLayerCB(const hector_change_layer_msgs::Change_layer_msg layer_msg);
   void InitialPose2DCB(const geometry_msgs::PoseWithCovarianceStamped initial_pose_2D);
   void RobotPoseChangedCB(const geometry_msgs::PoseStamped::ConstPtr& pose);
-  void HazardModelCB(const hazard_model_msgs::HazardModel& model);
   void MapPubTimerCB(const ros::TimerEvent& event);
 
   void publishMapForCurrentLayer(bool original = true);

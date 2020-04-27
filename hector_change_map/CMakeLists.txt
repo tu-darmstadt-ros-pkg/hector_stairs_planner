@@ -13,8 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2
   tf2_geometry_msgs
-  hazard_model_lib
   hector_move_base_msgs
+  grid_map_core
 )
 
 #add dynamic reconfigure api
@@ -98,7 +98,7 @@ endif(NEW_YAMLCPP_FOUND)
 catkin_package(
  INCLUDE_DIRS include
   LIBRARIES hector_change_map
-  CATKIN_DEPENDS roscpp tf map_server hector_change_layer_msgs tf2_ros tf2 tf2_geometry_msgs hazard_model_lib
+  CATKIN_DEPENDS roscpp tf map_server hector_change_layer_msgs tf2_ros tf2 tf2_geometry_msgs grid_map_core
 #  DEPENDS system_lib
 )
 
