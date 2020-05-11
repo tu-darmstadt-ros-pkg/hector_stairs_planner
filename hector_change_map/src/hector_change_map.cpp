@@ -7,7 +7,7 @@
 
 namespace hector_change_map{
 
-HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
+HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_), current_robot_layer_(-1) {
   ROS_INFO ("change map node started");
   ros::NodeHandle pnh("~");
 
@@ -61,7 +61,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
     return;
   }
 
-  map_pub_=  nh_.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
+  map_pub_ =  nh_.advertise<nav_msgs::OccupancyGrid>("/map", 100, true);
   original_map_pub_= nh_.advertise<nav_msgs::OccupancyGrid>("/original_map", 10, true);
   traversability_map_pub_ = nh_.advertise<nav_msgs::OccupancyGrid>("/traversability_map", 10, true);
   initial_pose_pub_= nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 100);
@@ -75,11 +75,7 @@ HectorChangeMap::HectorChangeMap(): tf_listener_(tf_buffer_) {
   dynamic_recf_type = boost::bind(&HectorChangeMap::dynamic_recf_cb, this, _1, _2);
   dynamic_recf_server.setCallback(dynamic_recf_type);
   
-  pnh.param("current_robot_layer", current_robot_layer_, -1);
   pnh.param("layer_distance_threshold", robot_layer_distance_threshold_, 0.5);
-  
-  //provide initial map
-  //map_pub_.publish(all_layer_information_.at(0).current_map);
   map_list_pub_.publish(layers_msg);
 
   double map_publish_period;
@@ -112,11 +108,12 @@ void HectorChangeMap::publishMapForCurrentLayer(bool original)
   {
     //publish map for layer
     ROS_DEBUG("provide map for layer, %i", current_robot_layer_);
-    if(current_robot_layer_< (int) all_layer_information_.size())
+    if(current_robot_layer_ >= 0 && current_robot_layer_< static_cast<int>(all_layer_information_.size()))
     {
-      nav_msgs::OccupancyGrid map = all_layer_information_.at(current_robot_layer_).current_map;
-      nav_msgs::OccupancyGrid original_map = all_layer_information_.at(current_robot_layer_).original_map;
-      nav_msgs::OccupancyGrid traversibility_map = all_layer_information_.at(current_robot_layer_).traversability_map;
+      const LayerInformation& layer = all_layer_information_.at(static_cast<size_t>(current_robot_layer_));
+      nav_msgs::OccupancyGrid map = layer.current_map;
+      nav_msgs::OccupancyGrid original_map = layer.original_map;
+      nav_msgs::OccupancyGrid traversibility_map = layer.traversability_map;
 
       try
       {
@@ -234,16 +231,19 @@ void HectorChangeMap::RobotPoseChangedCB(const geometry_msgs::PoseStamped::Const
   pose.header.frame_id = tf::strip_leading_slash(pose.header.frame_id);
   
   int layer = getLayerFromPose(pose);
-  if(layer >= 0)
+  if(layer >= 0 && layer != current_robot_layer_)
     changeCurrentLayer(layer);
 }
 
 void HectorChangeMap::changeCurrentLayer(int new_layer) {
-  if(new_layer >= 0 && new_layer < (int)all_layer_information_.size()) {
+  ROS_INFO_STREAM("Received request to change current map to " << new_layer);
+  if(new_layer >= 0 && new_layer < static_cast<int>(all_layer_information_.size())) {
     if(current_robot_layer_ != new_layer) {
       current_robot_layer_ = new_layer;
       publishMapForCurrentLayer();
       publishResetSignal();
+    } else {
+      ROS_INFO_STREAM("Not updating map because requested map is already the current map.");
     }
   } else {
     ROS_ERROR("[hector_change_map] no map available for layer %i", new_layer);
