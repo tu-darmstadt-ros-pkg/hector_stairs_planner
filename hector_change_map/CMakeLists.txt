@@ -113,30 +113,26 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${CMAKE_CXX_FLAGS}")
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
- add_library(hector_change_map
-   src/hector_change_map.cpp
-   src/hector_change_map_node.cpp
-   include/${PROJECT_NAME}/hector_change_map.h
- )
+add_library(hector_change_map
+  src/hector_change_map.cpp
+  include/${PROJECT_NAME}/hector_change_map.h
+)
 
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
 
-## Declare a cpp executable
- add_executable(hector_change_map_node src/hector_change_map_node.cpp)
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(hector_tutorial_node hector_tutorial_generate_messages_cpp)
-
-## Specify libraries to link a library or executable target against
- target_link_libraries(hector_change_map_node
-   hector_change_map
-   ${catkin_LIBRARIES}
+target_link_libraries(${PROJECT_NAME}
+  yaml-cpp
+  ${catkin_LIBRARIES}
 )
 
-target_link_libraries(hector_change_map
-    yaml-cpp
-   ${catkin_LIBRARIES}
+## Declare a cpp executable
+add_executable(hector_change_map_node src/hector_change_map_node.cpp)
+
+add_dependencies(hector_change_map_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(hector_change_map_node
+  ${PROJECT_NAME}
 )
 
 #############
