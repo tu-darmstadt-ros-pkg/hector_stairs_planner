@@ -158,7 +158,7 @@ nav_msgs::OccupancyGrid HectorChangeMap::loadMap(std::string file_to_load)
 {
   double res;
   std::string mapfname = "";
-  double origin[3];
+  double origin[4];
   int negate;
   double occ_th, free_th;
   
