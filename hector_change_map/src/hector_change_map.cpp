@@ -172,6 +172,7 @@ nav_msgs::OccupancyGrid HectorChangeMap::loadMap(std::string file_to_load)
   origin[0]=file["origin"][0].as<double>();
   origin[1]=file["origin"][1].as<double>();
   origin[2]=file["origin"][2].as<double>();
+  origin[3]=file["origin"][3].as<double>();
   
   mapfname=file["image"].as<std::string>();
   if(mapfname[0] != '/')
