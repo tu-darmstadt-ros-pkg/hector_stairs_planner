@@ -169,10 +169,11 @@ nav_msgs::OccupancyGrid HectorChangeMap::loadMap(std::string file_to_load)
   occ_th=file["occupied_thresh"].as<double>();
   free_th=file["free_thresh"].as<double>();
   
-  origin[0]=file["origin"][0].as<double>();
-  origin[1]=file["origin"][1].as<double>();
-  origin[2]=file["origin"][2].as<double>();
-  origin[3]=file["origin"][3].as<double>();
+  // 2D map origin, extended by height z
+  origin[0]=file["origin"][0].as<double>(); // x
+  origin[1]=file["origin"][1].as<double>(); // y
+  origin[2]=file["origin"][2].as<double>(); // yaw
+  origin[3]=file["origin"][3].as<double>(); // z
   
   mapfname=file["image"].as<std::string>();
   if(mapfname[0] != '/')
