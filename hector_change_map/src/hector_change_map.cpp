@@ -186,7 +186,7 @@ nav_msgs::OccupancyGrid HectorChangeMap::loadMap(std::string file_to_load)
   
   LayerInformation layer_info;
   nav_msgs::GetMap::Response map_resp_;
-  double origin_for_mapserver[]= {origin[0], origin[1], origin[2]};
+  double origin_for_mapserver[]= {origin[0], origin[1], origin[3]};
   map_server::loadMapFromFile(&map_resp_, mapfname.c_str(),res,negate,occ_th,free_th, origin_for_mapserver);
   nav_msgs::OccupancyGrid map;
   map=map_resp_.map;
